@@ -46,8 +46,16 @@ use App\Http\Controllers\Admin\WhatsappController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return auth()->check() ? redirect()->route('admin.dashboard') : redirect()->route('login');
+    $hotels = \App\Models\Hotel::with(['roomTypes' => function ($query) {
+        $query->where('status', true);
+    }, 'amenities'])->where('status', true)->get();
+    return view('welcome', compact('hotels'));
 });
+
+Route::view('/about', 'about');
+Route::view('/contact', 'contact');
+Route::view('/privacy', 'privacy');
+Route::view('/terms', 'terms');
 
 Route::get('login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('login', [AuthController::class, 'login'])->name('login.post');

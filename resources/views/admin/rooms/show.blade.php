@@ -110,7 +110,7 @@
                     @foreach(['available','dirty','clean','inspected','maintenance','out_of_order'] as $status)
                         @if($room->status !== $status)
                             <form method="POST" action="{{ route('admin.rooms.update-status', [$room->id, $status]) }}">
-                                @csrf @method('PATCH')
+                                @csrf
                                 <button type="submit" class="btn btn-sm btn-outline-secondary w-100">Mark as {{ ucfirst(str_replace('_',' ',$status)) }}</button>
                             </form>
                         @endif

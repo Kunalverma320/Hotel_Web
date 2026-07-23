@@ -42,5 +42,16 @@ class UserSeeder extends Seeder
             ]
         );
         $receptionist->assignRole('receptionist');
+
+        $user = User::firstOrCreate(
+            ['email' => 'user@hotelms.com'],
+            [
+                'name' => 'Guest User',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+                'status' => true,
+            ]
+        );
+        $user->assignRole('front-desk');
     }
 }

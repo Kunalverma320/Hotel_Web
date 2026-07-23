@@ -10,6 +10,8 @@ class HousekeepingAssignment extends Model
 {
     use HasFactory;
 
+    protected $table = 'housekeeping_tasks';
+
     protected $fillable = [
         'hotel_id',
         'room_id',

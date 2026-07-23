@@ -242,6 +242,12 @@
             const wrapper = document.getElementById('page-content-wrapper');
             
             if (toggleBtn && sidebar && wrapper) {
+                // Auto-collapse sidebar on load for medium screens (tablets)
+                if (window.innerWidth <= 1200 && window.innerWidth > 768) {
+                    sidebar.classList.add('collapsed');
+                    wrapper.classList.add('sidebar-collapsed');
+                }
+
                 toggleBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
                     if (window.innerWidth > 768) {

@@ -24,6 +24,7 @@ class AuthController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
+            'hotel_id' => 'nullable|exists:hotels,id',
         ]);
 
         $credentials = $request->only('email', 'password');
@@ -38,12 +39,15 @@ class AuthController extends Controller
         $user = Auth::user();
 
         if ($user->two_factor_secret) {
-            session(['2fa_pending_user' => $user->id]);
+            session([
+                '2fa_pending_user' => $user->id,
+                '2fa_selected_hotel_id' => $request->input('hotel_id')
+            ]);
             Auth::logout();
             return redirect()->route('login.2fa.form');
         }
 
-        return $this->finalizeLogin($user);
+        return $this->finalizeLogin($user, $request->input('hotel_id'));
     }
 
     public function showTwoFactorForm()
@@ -65,10 +69,11 @@ class AuthController extends Controller
             ]);
         }
 
-        session()->forget('2fa_pending_user');
+        $selectedHotelId = session('2fa_selected_hotel_id');
+        session()->forget(['2fa_pending_user', '2fa_selected_hotel_id']);
         Auth::login($user);
 
-        return $this->finalizeLogin($user);
+        return $this->finalizeLogin($user, $selectedHotelId);
     }
 
     public function verifyBackupCode(Request $request)
@@ -80,20 +85,23 @@ class AuthController extends Controller
             return redirect()->route('login');
         }
 
-        session()->forget('2fa_pending_user');
+        $selectedHotelId = session('2fa_selected_hotel_id');
+        session()->forget(['2fa_pending_user', '2fa_selected_hotel_id']);
         Auth::login($user);
 
-        return $this->finalizeLogin($user);
+        return $this->finalizeLogin($user, $selectedHotelId);
     }
 
-    protected function finalizeLogin($user)
+    protected function finalizeLogin($user, $selectedHotelId = null)
     {
         $user->update([
             'last_login_at' => now(),
             'last_login_ip' => request()->ip(),
         ]);
 
-        if ($user->hotel_id) {
+        if ($selectedHotelId) {
+            session(['current_hotel_id' => $selectedHotelId]);
+        } elseif ($user->hotel_id) {
             session(['current_hotel_id' => $user->hotel_id]);
         } else {
             $firstHotel = \App\Models\Hotel::first();
