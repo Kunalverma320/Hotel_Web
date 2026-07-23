@@ -57,19 +57,32 @@ Route::view('/contact', 'contact');
 Route::view('/privacy', 'privacy');
 Route::view('/terms', 'terms');
 
+// Customer Login Routes
 Route::get('login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('login', [AuthController::class, 'login'])->name('login.post');
-Route::post('login/2fa/verify', [AuthController::class, 'verifyTwoFactor'])->name('login.2fa.verify');
-Route::post('login/2fa/backup', [AuthController::class, 'verifyBackupCode'])->name('login.2fa.backup');
-Route::get('login/2fa', [AuthController::class, 'showTwoFactorForm'])->name('login.2fa.form');
+
+// Admin Login Routes (Separate)
+Route::get('admin/login', [AuthController::class, 'showAdminLogin'])->name('admin.login');
+Route::post('admin/login', [AuthController::class, 'adminLogin'])->name('admin.login.post');
+
+// Admin 2FA Verification Routes
+Route::post('admin/login/2fa/verify', [AuthController::class, 'verifyTwoFactor'])->name('admin.login.2fa.verify');
+Route::post('admin/login/2fa/backup', [AuthController::class, 'verifyBackupCode'])->name('admin.login.2fa.backup');
+Route::get('admin/login/2fa', [AuthController::class, 'showTwoFactorForm'])->name('admin.login.2fa.form');
+
 Route::get('logout', [AuthController::class, 'logout'])->name('logout');
+
+Route::middleware('auth')->group(function () {
+    Route::get('my-bookings', [\App\Http\Controllers\CustomerBookingController::class, 'index'])->name('my-bookings');
+    Route::post('guest-bookings', [\App\Http\Controllers\CustomerBookingController::class, 'store'])->name('guest-bookings.store');
+});
 
 Route::get('password/reset', [AuthController::class, 'forgotPassword'])->name('password.request');
 Route::post('password/email', [AuthController::class, 'sendResetLink'])->name('password.email');
 Route::get('password/reset/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
 Route::post('password/reset', [AuthController::class, 'resetPassword'])->name('password.update');
 
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'set-current-hotel'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'set-current-hotel', 'check-admin-access'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::controller(AuthController::class)->prefix('auth')->name('auth.')->group(function () {

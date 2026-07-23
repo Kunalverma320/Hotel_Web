@@ -7,7 +7,7 @@
     <h5 class="fw-bold mb-1">Welcome back</h5>
     <p class="text-muted mb-4" style="font-size:0.875rem;">Sign in to your account</p>
 
-    <form method="POST" action="{{ route('login') }}" id="loginForm">
+    <form method="POST" action="{{ route('admin.login.post') }}" id="loginForm">
         @csrf
         <div class="mb-3">
             <label for="email" class="form-label">Email Address</label>

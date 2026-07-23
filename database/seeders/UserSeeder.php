@@ -52,6 +52,6 @@ class UserSeeder extends Seeder
                 'status' => true,
             ]
         );
-        $user->assignRole('front-desk');
+        // Customer accounts do not have staff roles.
     }
 }

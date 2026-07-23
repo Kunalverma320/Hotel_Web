@@ -825,8 +825,49 @@
 
     function submitDrawerInquiry(e) {
         e.preventDefault();
-        document.getElementById('drawerBookingForm').style.display = 'none';
-        document.getElementById('drawerSuccessPanel').style.display = 'block';
+        
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalBtnContent = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+
+        const data = {
+            hotel_name: document.getElementById('drawerHotelTitle').textContent,
+            room_type: document.getElementById('drawerRoomType').value,
+            guest_name: document.getElementById('drawerGuestName').value,
+            guest_email: document.getElementById('drawerGuestEmail').value,
+            check_in: document.getElementById('drawerCheckin').value,
+            check_out: document.getElementById('drawerCheckout').value,
+            notes: document.getElementById('drawerMessage').value,
+        };
+
+        fetch('{{ route("guest-bookings.store") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(res => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnContent;
+            
+            if (res.success) {
+                document.getElementById('drawerBookingForm').style.display = 'none';
+                document.getElementById('drawerSuccessPanel').style.display = 'block';
+            } else {
+                alert('Something went wrong. Please check your details and try again.');
+            }
+        })
+        .catch(err => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnContent;
+            console.error(err);
+            alert('An error occurred during booking. Please try again.');
+        });
     }
 </script>
 @endsection

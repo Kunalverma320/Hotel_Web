@@ -16,7 +16,17 @@ return Application::configure(basePath: dirname(__DIR__))
             'set-current-hotel' => \App\Http\Middleware\SetCurrentHotel::class,
             'check-permission' => \App\Http\Middleware\CheckPermission::class,
             'audit-log' => \App\Http\Middleware\AuditLog::class,
+            'check-admin-access' => \App\Http\Middleware\CheckAdminAccess::class,
         ]);
+
+        $middleware->redirectTo(
+            function (Request $request) {
+                if ($request->is('admin') || $request->is('admin/*')) {
+                    return route('admin.login');
+                }
+                return route('login');
+            }
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

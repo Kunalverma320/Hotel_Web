@@ -202,16 +202,54 @@
                 <button class="theme-toggle-header" onclick="toggleTheme()" title="Toggle Dark Mode">
                     <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
                 </button>
-                <a href="{{ route('login') }}" class="login-btn-header">
-                    <i class="bi bi-person-circle"></i>
-                    <span>Login or Create Account</span>
-                </a>
+                @auth
+                    @if(auth()->user()->roles()->exists())
+                        <a href="{{ route('admin.dashboard') }}" class="login-btn-header" style="background: linear-gradient(90deg, #10b981 0%, #059669 100%);">
+                            <i class="bi bi-speedometer2"></i>
+                            <span>Admin Panel</span>
+                        </a>
+                    @else
+                        <span class="text-white fw-bold small"><i class="bi bi-person-circle me-1"></i>{{ auth()->user()->name }}</span>
+                        <a href="{{ route('my-bookings') }}" class="btn btn-sm btn-outline-light ms-2" style="border-radius: 8px; font-weight: 600; padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+                            <i class="bi bi-journal-text me-1"></i>My Bookings
+                        </a>
+                    @endif
+                    <a href="{{ route('logout') }}" class="btn btn-outline-danger btn-sm" style="border-radius: 8px; padding: 0.5rem 1rem; font-weight: 600;">
+                        <i class="bi bi-box-arrow-right me-1"></i>Logout
+                    </a>
+                @else
+                    <a href="{{ route('login') }}" class="login-btn-header">
+                        <i class="bi bi-person-circle"></i>
+                        <span>Login or Create Account</span>
+                    </a>
+                @endauth
             </div>
         </div>
     </header>
 
-    <!-- Main Content Slot -->
     <main>
+        @if(session('error'))
+        <div class="container mt-4 mb-2">
+            <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm d-flex align-items-center justify-content-between text-start" role="alert" style="border-radius: 12px; background: rgba(239, 68, 68, 0.15); color: #f87171; padding: 1rem 1.5rem;">
+                <div>
+                    <i class="bi bi-exclamation-triangle-fill me-2" style="font-size:1.1rem;"></i>
+                    {{ session('error') }}
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close" style="position:static; padding:0; filter:invert(1);"></button>
+            </div>
+        </div>
+        @endif
+        @if(session('success'))
+        <div class="container mt-4 mb-2">
+            <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm d-flex align-items-center justify-content-between text-start" role="alert" style="border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: #34d399; padding: 1rem 1.5rem;">
+                <div>
+                    <i class="bi bi-check-circle-fill me-2" style="font-size:1.1rem;"></i>
+                    {{ session('success') }}
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close" style="position:static; padding:0; filter:invert(1);"></button>
+            </div>
+        </div>
+        @endif
         @yield('content')
     </main>
 
