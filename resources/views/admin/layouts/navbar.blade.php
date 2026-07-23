@@ -1,10 +1,12 @@
-<nav class="navbar navbar-expand-lg bg-white border-bottom px-4 py-2" id="main-navbar">
+<nav class="navbar navbar-expand-lg border-bottom px-4 py-2" id="main-navbar">
     <div class="container-fluid">
-        <button class="btn btn-sm btn-outline-secondary d-md-none" id="toggle-sidebar">
-            <i class="bi bi-list fs-5"></i>
-        </button>
-        <div class="d-none d-md-block">
-            <h5 class="mb-0 fw-semibold">@yield('page-title', 'Dashboard')</h5>
+        <div class="d-flex align-items-center gap-3">
+            <button class="btn btn-sm btn-outline-secondary" id="toggle-sidebar">
+                <i class="bi bi-list fs-5"></i>
+            </button>
+            <div class="d-none d-md-block">
+                <h5 class="mb-0 fw-semibold">@yield('page-title', 'Dashboard')</h5>
+            </div>
         </div>
         <div class="ms-auto d-flex align-items-center gap-3">
             {{-- Hotel Selector --}}
