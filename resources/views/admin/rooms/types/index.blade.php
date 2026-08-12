@@ -14,31 +14,22 @@
     <div class="card-body">
         <form method="GET" action="{{ route('admin.room-types.index') }}">
             <div class="row g-3 align-items-end">
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label class="form-label">Hotel</label>
-                    <select name="hotel_id" class="form-select form-select-sm">
+                    <select name="hotel_id" id="hotel_filter" class="form-select form-select-sm" onchange="this.form.submit()">
                         <option value="">All Hotels</option>
                         @foreach($hotels as $hotel)
-                            <option value="{{ $hotel->id }}" {{ request('hotel_id') == $hotel->id ? 'selected' : '' }}>{{ $hotel->name }}</option>
+                            <option value="{{ $hotel->id }}" {{ (string)$selectedHotelId === (string)$hotel->id ? 'selected' : '' }}>{{ $hotel->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label">Category</label>
-                    <select name="category_id" class="form-select form-select-sm">
-                        <option value="">All Categories</option>
-                        @foreach($roomCategories as $cat)
-                            <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label class="form-label">Search</label>
-                    <input type="text" name="search" class="form-control form-control-sm" placeholder="Search..." value="{{ request('search') }}">
+                    <input type="text" name="search" class="form-control form-control-sm" placeholder="Search room type name..." value="{{ request('search') }}">
                 </div>
-                <div class="col-md-3 d-flex gap-1">
-                    <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
-                    <a href="{{ route('admin.room-types.index') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-counterclockwise"></i></a>
+                <div class="col-md-4 d-flex gap-1">
+                    <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search"></i> Search</button>
+                    <a href="{{ route('admin.room-types.index') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
                 </div>
             </div>
         </form>
@@ -52,7 +43,6 @@
                 <tr>
                     <th>Name</th>
                     <th>Hotel</th>
-                    <th>Category</th>
                     <th>Base Price</th>
                     <th>Max Adults</th>
                     <th>Bed</th>
@@ -65,13 +55,18 @@
                 @forelse($roomTypes as $type)
                     <tr>
                         <td class="fw-semibold">{{ $type->name }}</td>
-                        <td>{{ $type->hotel->name ?? 'N/A' }}</td>
-                        <td>{{ $type->roomCategory->name ?? '-' }}</td>
-                        <td>{{ number_format($type->base_price, 2) }}</td>
+                        <td>
+                            @if($type->hotel)
+                                <span class="badge bg-light text-dark border"><i class="bi bi-building me-1"></i>{{ $type->hotel->name }}</span>
+                            @else
+                                <span class="text-muted">N/A</span>
+                            @endif
+                        </td>
+                        <td>${{ number_format($type->base_price ?? $type->base_rate ?? 0, 2) }}</td>
                         <td>{{ $type->max_adults }}</td>
                         <td>{{ $type->bed_type ?? '-' }} ({{ $type->bed_count ?? 0 }})</td>
                         <td><span class="badge bg-info">{{ $type->rooms_count ?? $type->rooms->count() }}</span></td>
-                        <td><span class="badge bg-{{ $type->is_active ? 'success' : 'secondary' }}">{{ $type->is_active ? 'Active' : 'Inactive' }}</span></td>
+                        <td><span class="badge bg-{{ $type->status ? 'success' : 'secondary' }}">{{ $type->status ? 'Active' : 'Inactive' }}</span></td>
                         <td class="text-end">
                             <a href="{{ route('admin.room-types.show', $type->id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
                             <a href="{{ route('admin.room-types.edit', $type->id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>

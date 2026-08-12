@@ -12,11 +12,20 @@ class RoomTypeController extends Controller
 {
     public function index(Request $request)
     {
-        $query = RoomType::with(['hotel', 'roomCategory']);
+        $query = RoomType::with(['hotel', 'roomCategory', 'rooms']);
 
-        if ($request->filled('hotel_id')) {
-            $query->byHotel($request->hotel_id);
+        if ($request->has('hotel_id')) {
+            $selectedHotelId = $request->input('hotel_id');
+            if (!empty($selectedHotelId)) {
+                $query->byHotel($selectedHotelId);
+            }
+        } else {
+            $selectedHotelId = session('current_hotel_id');
+            if ($selectedHotelId) {
+                $query->byHotel($selectedHotelId);
+            }
         }
+
         if ($request->filled('category_id')) {
             $query->byCategory($request->category_id);
         }
@@ -32,15 +41,16 @@ class RoomTypeController extends Controller
         $hotels = Hotel::active()->orderBy('name')->get();
         $roomCategories = RoomCategory::active()->orderBy('name')->get();
 
-        return view('admin.rooms.types.index', compact('roomTypes', 'hotels', 'roomCategories'));
+        return view('admin.rooms.types.index', compact('roomTypes', 'hotels', 'roomCategories', 'selectedHotelId'));
     }
 
     public function create()
     {
         $hotels = Hotel::active()->orderBy('name')->get();
+        $selectedHotelId = session('current_hotel_id');
         $roomCategories = RoomCategory::active()->orderBy('name')->get();
 
-        return view('admin.rooms.types.create', compact('hotels', 'roomCategories'));
+        return view('admin.rooms.types.create', compact('hotels', 'roomCategories', 'selectedHotelId'));
     }
 
     public function store(Request $request)
@@ -67,12 +77,17 @@ class RoomTypeController extends Controller
 
         $data = $request->only([
             'hotel_id', 'room_category_id', 'name', 'description',
-            'base_price', 'weekend_price', 'peak_price',
-            'max_adults', 'max_children', 'max_infants',
+            'base_price', 'base_rate', 'weekend_price', 'weekend_rate', 'peak_price', 'holiday_rate',
+            'max_adults', 'max_children', 'max_infants', 'max_occupancy',
             'bed_type', 'bed_count', 'room_size', 'room_size_unit',
-            'smoking_allowed', 'pet_allowed', 'is_active',
+            'smoking_allowed', 'pet_allowed',
         ]);
         $data['slug'] = \Illuminate\Support\Str::slug($request->name);
+        if (isset($data['base_price']) && !isset($data['base_rate'])) {
+            $data['base_rate'] = $data['base_price'];
+        }
+        $statusInput = $request->input('status', $request->input('is_active', 1));
+        $data['status'] = in_array($statusInput, ['active', '1', 1, true], true) ? 1 : 0;
 
         RoomType::create($data);
 
@@ -90,9 +105,10 @@ class RoomTypeController extends Controller
     {
         $roomType = RoomType::findOrFail($id);
         $hotels = Hotel::active()->orderBy('name')->get();
+        $selectedHotelId = $roomType->hotel_id ?? session('current_hotel_id');
         $roomCategories = RoomCategory::active()->orderBy('name')->get();
 
-        return view('admin.rooms.types.edit', compact('roomType', 'hotels', 'roomCategories'));
+        return view('admin.rooms.types.edit', compact('roomType', 'hotels', 'roomCategories', 'selectedHotelId'));
     }
 
     public function update(Request $request, $id)
@@ -104,7 +120,8 @@ class RoomTypeController extends Controller
             'room_category_id' => 'nullable|exists:room_categories,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'base_price' => 'required|numeric|min:0',
+            'base_price' => 'nullable|numeric|min:0',
+            'base_rate' => 'nullable|numeric|min:0',
             'weekend_price' => 'nullable|numeric|min:0',
             'peak_price' => 'nullable|numeric|min:0',
             'max_adults' => 'required|integer|min:1',
@@ -116,17 +133,21 @@ class RoomTypeController extends Controller
             'room_size_unit' => 'nullable|in:sqft,sqm',
             'smoking_allowed' => 'boolean',
             'pet_allowed' => 'boolean',
-            'is_active' => 'boolean',
         ]);
 
         $data = $request->only([
             'hotel_id', 'room_category_id', 'name', 'description',
-            'base_price', 'weekend_price', 'peak_price',
-            'max_adults', 'max_children', 'max_infants',
+            'base_price', 'base_rate', 'weekend_price', 'weekend_rate', 'peak_price', 'holiday_rate',
+            'max_adults', 'max_children', 'max_infants', 'max_occupancy',
             'bed_type', 'bed_count', 'room_size', 'room_size_unit',
-            'smoking_allowed', 'pet_allowed', 'is_active',
+            'smoking_allowed', 'pet_allowed',
         ]);
         $data['slug'] = \Illuminate\Support\Str::slug($request->name);
+        if (isset($data['base_price']) && !isset($data['base_rate'])) {
+            $data['base_rate'] = $data['base_price'];
+        }
+        $statusInput = $request->input('status', $request->input('is_active', 1));
+        $data['status'] = in_array($statusInput, ['active', '1', 1, true], true) ? 1 : 0;
 
         $roomType->update($data);
 

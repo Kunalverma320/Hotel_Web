@@ -71,7 +71,15 @@ class AppServiceProvider extends ServiceProvider
         $this->app['router']->aliasMiddleware('audit-log', AuditLog::class);
 
         View::composer('admin.*', function ($view) {
-            $view->with('currentHotel', Hotel::find(session('current_hotel_id')));
+            $currentHotelId = session('current_hotel_id');
+            $currentHotel = $currentHotelId ? Hotel::find($currentHotelId) : null;
+            $allHotels = Hotel::active()->orderBy('name')->get();
+            if ($allHotels->isEmpty()) {
+                $allHotels = Hotel::orderBy('name')->get();
+            }
+
+            $view->with('currentHotel', $currentHotel);
+            $view->with('allHotels', $allHotels);
             $view->with('appName', config('app.name'));
             $view->with('appSettings', Setting::pluck('value', 'key')->toArray());
         });

@@ -6,7 +6,7 @@
 <h5 class="fw-bold mb-1"><i class="bi bi-shield-lock me-1"></i> Two-Factor Authentication</h5>
 <p class="text-muted mb-4" style="font-size:0.875rem;">Enter the 6-digit code from your authenticator app to continue.</p>
 
-<form method="POST" action="{{ route('login.2fa.verify') }}">
+<form method="POST" action="{{ route('admin.login.2fa.verify') }}">
     @csrf
     <div class="mb-3">
         <label for="otp_code" class="form-label">Verification Code</label>
@@ -28,7 +28,7 @@
 
 <h6 class="text-center text-muted mb-3" style="font-size:0.8125rem;">Or use a backup code</h6>
 
-<form method="POST" action="{{ route('login.2fa.backup') }}">
+<form method="POST" action="{{ route('admin.login.2fa.backup') }}">
     @csrf
     <div class="mb-3">
         <input type="text" class="form-control text-center @error('backup_code') is-invalid @enderror"

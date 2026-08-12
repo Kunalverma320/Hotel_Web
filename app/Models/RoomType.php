@@ -32,6 +32,7 @@ class RoomType extends Model
         'smoking_allowed',
         'pet_allowed',
         'image',
+        'status',
         'is_active',
         'settings',
     ];
@@ -49,6 +50,7 @@ class RoomType extends Model
             'room_size' => 'decimal:2',
             'smoking_allowed' => 'boolean',
             'pet_allowed' => 'boolean',
+            'status' => 'boolean',
             'is_active' => 'boolean',
             'settings' => 'array',
         ];
@@ -76,7 +78,9 @@ class RoomType extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where(function ($q) {
+            $q->where('status', 1)->orWhere('status', 'active')->orWhere('status', true);
+        });
     }
 
     public function scopeByHotel($query, int $hotelId)

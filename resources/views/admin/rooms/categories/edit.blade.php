@@ -39,10 +39,10 @@
                     <textarea name="description" class="form-control" rows="3">{{ old('description', $roomCategory->description) }}</textarea>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Active</label>
+                    <label class="form-label">Active Status</label>
                     <div class="form-check form-switch mt-2">
-                        <input type="hidden" name="is_active" value="0">
-                        <input type="checkbox" name="is_active" value="1" class="form-check-input" {{ old('is_active', $roomCategory->is_active) ? 'checked' : '' }}>
+                        <input type="hidden" name="status" value="0">
+                        <input type="checkbox" name="status" value="1" class="form-check-input" {{ old('status', $roomCategory->status) ? 'checked' : '' }}>
                     </div>
                 </div>
             </div>

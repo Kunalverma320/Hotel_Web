@@ -18,6 +18,7 @@ class Hotel extends Model
         'branch_id',
         'name',
         'slug',
+        'tagline',
         'description',
         'star_rating',
         'email',
@@ -29,11 +30,18 @@ class Hotel extends Model
         'city',
         'state',
         'country',
+        'zipcode',
         'postal_code',
         'latitude',
         'longitude',
         'check_in_time',
         'check_out_time',
+        'cancellation_policy',
+        'description_policy',
+        'meta_title',
+        'meta_description',
+        'meta_keywords',
+        'status',
         'is_active',
         'settings',
     ];
@@ -44,6 +52,7 @@ class Hotel extends Model
             'star_rating' => 'integer',
             'latitude' => 'decimal:8',
             'longitude' => 'decimal:8',
+            'status' => 'boolean',
             'is_active' => 'boolean',
             'settings' => 'array',
         ];
@@ -226,7 +235,9 @@ class Hotel extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where(function ($q) {
+            $q->where('status', 1)->orWhere('status', 'active')->orWhere('status', true);
+        });
     }
 
     public function scopeByCompany($query, int $companyId)

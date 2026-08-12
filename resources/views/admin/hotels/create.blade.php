@@ -52,8 +52,10 @@
                             <label for="branch_id" class="form-label">Branch</label>
                             <select name="branch_id" id="branch_id" class="form-select">
                                 <option value="">Select Branch</option>
-                                @foreach($branches as $id => $name)
-                                    <option value="{{ $id }}" {{ old('branch_id', request('branch_id')) == $id ? 'selected' : '' }}>{{ $name }}</option>
+                                @foreach($branches as $branch)
+                                    <option value="{{ $branch->id }}" data-company="{{ $branch->company_id }}" {{ old('branch_id', request('branch_id')) == $branch->id ? 'selected' : '' }}>
+                                        {{ $branch->name }} {{ $branch->code ? '('.$branch->code.')' : '' }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -230,4 +232,48 @@
         <a href="{{ route('admin.hotels.index') }}" class="btn btn-outline-secondary">Cancel</a>
     </div>
 </form>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const companySelect = document.getElementById('company_id');
+        const branchSelect = document.getElementById('branch_id');
+
+        if (companySelect && branchSelect) {
+            function filterBranches() {
+                const selectedCompanyId = companySelect.value;
+                const options = branchSelect.querySelectorAll('option');
+
+                let hasValidSelection = false;
+
+                options.forEach(option => {
+                    const companyId = option.getAttribute('data-company');
+                    if (!option.value) {
+                        option.style.display = '';
+                    } else if (!selectedCompanyId || companyId === selectedCompanyId) {
+                        option.style.display = '';
+                        option.disabled = false;
+                        if (option.selected) {
+                            hasValidSelection = true;
+                        }
+                    } else {
+                        option.style.display = 'none';
+                        option.disabled = true;
+                        if (option.selected) {
+                            option.selected = false;
+                        }
+                    }
+                });
+
+                if (!hasValidSelection && branchSelect.value && branchSelect.querySelector(`option[value="${branchSelect.value}"]`)?.disabled) {
+                    branchSelect.value = '';
+                }
+            }
+
+            companySelect.addEventListener('change', filterBranches);
+            filterBranches();
+        }
+    });
+</script>
+@endpush
 @endsection

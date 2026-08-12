@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Company;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class BranchController extends Controller
 {
@@ -14,13 +15,19 @@ class BranchController extends Controller
         $query = Branch::with('company');
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', "%{$request->search}%");
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('code', 'like', "%{$search}%")
+                  ->orWhere('city', 'like', "%{$search}%");
+            });
         }
         if ($request->filled('company_id')) {
             $query->where('company_id', $request->company_id);
         }
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $statusVal = in_array($request->status, ['active', '1', 1, true], true) ? 1 : 0;
+            $query->where('status', $statusVal);
         }
 
         $branches = $query->latest()->paginate(15);
@@ -46,9 +53,25 @@ class BranchController extends Controller
             'zipcode' => 'nullable|string|max:20',
             'phone' => 'nullable|string|max:30',
             'email' => 'nullable|email|max:255',
-            'status' => 'required|in:active,inactive',
+            'status' => 'required',
         ]);
-        Branch::create($request->all());
+
+        $data = $request->only([
+            'company_id', 'name', 'code', 'slug', 'address', 'city', 'state',
+            'country', 'zipcode', 'phone', 'email', 'contact_person', 'branch_manager_id'
+        ]);
+
+        if ($request->filled('manager_id') && empty($data['branch_manager_id'])) {
+            $data['branch_manager_id'] = $request->manager_id;
+        }
+
+        if (empty($data['slug'])) {
+            $data['slug'] = Str::slug($request->name) . '-' . time();
+        }
+
+        $data['status'] = in_array($request->status, ['active', '1', 1, true], true) ? 1 : 0;
+
+        Branch::create($data);
         return redirect()->route('admin.branches.index')->with('success', 'Branch created successfully.');
     }
 
@@ -67,6 +90,8 @@ class BranchController extends Controller
 
     public function update(Request $request, $id)
     {
+        $branch = Branch::findOrFail($id);
+
         $request->validate([
             'company_id' => 'required|exists:companies,id',
             'name' => 'required|string|max:255',
@@ -78,9 +103,25 @@ class BranchController extends Controller
             'zipcode' => 'nullable|string|max:20',
             'phone' => 'nullable|string|max:30',
             'email' => 'nullable|email|max:255',
-            'status' => 'required|in:active,inactive',
+            'status' => 'required',
         ]);
-        Branch::findOrFail($id)->update($request->all());
+
+        $data = $request->only([
+            'company_id', 'name', 'code', 'slug', 'address', 'city', 'state',
+            'country', 'zipcode', 'phone', 'email', 'contact_person', 'branch_manager_id'
+        ]);
+
+        if ($request->filled('manager_id') && empty($data['branch_manager_id'])) {
+            $data['branch_manager_id'] = $request->manager_id;
+        }
+
+        if (empty($data['slug'])) {
+            $data['slug'] = Str::slug($request->name);
+        }
+
+        $data['status'] = in_array($request->status, ['active', '1', 1, true], true) ? 1 : 0;
+
+        $branch->update($data);
         return redirect()->route('admin.branches.index')->with('success', 'Branch updated successfully.');
     }
 
@@ -92,10 +133,11 @@ class BranchController extends Controller
 
     public function updateStatus($id, $status)
     {
-        if (!in_array($status, ['active', 'inactive'])) {
+        if (!in_array($status, ['active', 'inactive', '1', '0'])) {
             return redirect()->back()->with('error', 'Invalid status.');
         }
-        Branch::findOrFail($id)->update(['status' => $status]);
+        $statusVal = in_array($status, ['active', '1'], true) ? 1 : 0;
+        Branch::findOrFail($id)->update(['status' => $statusVal]);
         return redirect()->back()->with('success', 'Branch status updated successfully.');
     }
 }

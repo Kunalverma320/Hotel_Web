@@ -60,7 +60,7 @@
                         <td>{{ $company->city ?? '-' }}</td>
                         <td>{{ $company->phone ?? '-' }}</td>
                         <td>
-                            @if($company->status == 'active')
+                            @if($company->status)
                                 <span class="badge bg-success">Active</span>
                             @else
                                 <span class="badge bg-danger">Inactive</span>

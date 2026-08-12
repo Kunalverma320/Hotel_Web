@@ -8,8 +8,13 @@ use App\Models\HotelImage;
 use App\Models\Company;
 use App\Models\Branch;
 use App\Models\Amenity;
+use App\Models\Floor;
+use App\Models\Building;
+use App\Models\RoomType;
+use App\Models\RoomCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class HotelController extends Controller
 {
@@ -38,7 +43,7 @@ class HotelController extends Controller
     public function create()
     {
         $companies = Company::orderBy('name')->pluck('name', 'id');
-        $branches = Branch::orderBy('name')->pluck('name', 'id');
+        $branches = Branch::orderBy('name')->get();
         $amenities = Amenity::orderBy('name')->get();
         return view('admin.hotels.create', compact('companies', 'branches', 'amenities'));
     }
@@ -67,9 +72,16 @@ class HotelController extends Controller
             'check_in_time' => 'nullable|date_format:H:i',
             'check_out_time' => 'nullable|date_format:H:i',
             'cancellation_policy' => 'nullable|string',
-            'status' => 'required|in:active,inactive',
+            'status' => 'required',
         ]);
         $data = $request->except('logo', 'cover_image', 'amenities');
+
+        if (empty($data['slug'])) {
+            $data['slug'] = Str::slug($request->name) . '-' . time();
+        }
+
+        $data['status'] = in_array($request->status, ['active', '1', 1, true], true) ? 1 : 0;
+
         if ($request->hasFile('logo')) {
             $data['logo'] = $request->file('logo')->store('hotels/logos', 'public');
         }
@@ -85,7 +97,7 @@ class HotelController extends Controller
 
     public function show($id)
     {
-        $hotel = Hotel::with('company', 'branch', 'amenities', 'images')->findOrFail($id);
+        $hotel = Hotel::with('company', 'branch', 'amenities', 'images', 'nearbyPlaces')->findOrFail($id);
         return view('admin.hotels.show', compact('hotel'));
     }
 
@@ -93,7 +105,7 @@ class HotelController extends Controller
     {
         $hotel = Hotel::findOrFail($id);
         $companies = Company::orderBy('name')->pluck('name', 'id');
-        $branches = Branch::orderBy('name')->pluck('name', 'id');
+        $branches = Branch::orderBy('name')->get();
         $amenities = Amenity::orderBy('name')->get();
         return view('admin.hotels.edit', compact('hotel', 'companies', 'branches', 'amenities'));
     }
@@ -122,10 +134,16 @@ class HotelController extends Controller
             'check_in_time' => 'nullable|date_format:H:i',
             'check_out_time' => 'nullable|date_format:H:i',
             'cancellation_policy' => 'nullable|string',
-            'status' => 'required|in:active,inactive',
+            'status' => 'required',
         ]);
         $hotel = Hotel::findOrFail($id);
         $data = $request->except('logo', 'cover_image', 'amenities');
+
+        if (empty($data['slug'])) {
+            $data['slug'] = Str::slug($request->name);
+        }
+
+        $data['status'] = in_array($request->status, ['active', '1', 1, true], true) ? 1 : 0;
         if ($request->hasFile('logo')) {
             if ($hotel->logo) {
                 Storage::disk('public')->delete($hotel->logo);
@@ -226,10 +244,33 @@ class HotelController extends Controller
 
     public function updateStatus($id, $status)
     {
-        if (!in_array($status, ['active', 'inactive'])) {
+        if (!in_array($status, ['active', 'inactive', '1', '0'])) {
             return redirect()->back()->with('error', 'Invalid status.');
         }
-        Hotel::findOrFail($id)->update(['status' => $status]);
+        $statusVal = in_array($status, ['active', '1'], true) ? 1 : 0;
+        Hotel::findOrFail($id)->update(['status' => $statusVal]);
         return redirect()->back()->with('success', 'Hotel status updated successfully.');
+    }
+
+    public function getOptions($hotelId)
+    {
+        if ($hotelId === 'all' || $hotelId === '0' || empty($hotelId)) {
+            $floors = Floor::active()->orderBy('floor_number')->get();
+            $buildings = Building::active()->orderBy('name')->get();
+            $roomTypes = RoomType::active()->orderBy('name')->get();
+            $categories = RoomCategory::active()->orderBy('name')->get();
+        } else {
+            $floors = Floor::active()->where('hotel_id', $hotelId)->orderBy('floor_number')->get();
+            $buildings = Building::active()->where('hotel_id', $hotelId)->orderBy('name')->get();
+            $roomTypes = RoomType::active()->where('hotel_id', $hotelId)->orderBy('name')->get();
+            $categories = RoomCategory::active()->where('hotel_id', $hotelId)->orderBy('name')->get();
+        }
+
+        return response()->json([
+            'floors' => $floors->map(fn($f) => ['id' => $f->id, 'name' => $f->name, 'number' => $f->floor_number ?? $f->number ?? 0]),
+            'buildings' => $buildings->map(fn($b) => ['id' => $b->id, 'name' => $b->name]),
+            'room_types' => $roomTypes->map(fn($t) => ['id' => $t->id, 'name' => $t->name, 'price' => number_format($t->base_price ?? $t->base_rate ?? 0, 2)]),
+            'categories' => $categories->map(fn($c) => ['id' => $c->id, 'name' => $c->name]),
+        ]);
     }
 }

@@ -16,10 +16,10 @@
             <div class="row g-3 align-items-end">
                 <div class="col-md-4">
                     <label class="form-label">Hotel</label>
-                    <select name="hotel_id" class="form-select form-select-sm">
+                    <select name="hotel_id" class="form-select form-select-sm" onchange="this.form.submit()">
                         <option value="">All Hotels</option>
                         @foreach($hotels as $hotel)
-                            <option value="{{ $hotel->id }}" {{ request('hotel_id') == $hotel->id ? 'selected' : '' }}>{{ $hotel->name }}</option>
+                            <option value="{{ $hotel->id }}" {{ (string)$selectedHotelId === (string)$hotel->id ? 'selected' : '' }}>{{ $hotel->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -28,8 +28,8 @@
                     <input type="text" name="search" class="form-control form-control-sm" placeholder="Search..." value="{{ request('search') }}">
                 </div>
                 <div class="col-md-4 d-flex gap-1">
-                    <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
-                    <a href="{{ route('admin.room-categories.index') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-counterclockwise"></i></a>
+                    <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search"></i> Search</button>
+                    <a href="{{ route('admin.room-categories.index') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
                 </div>
             </div>
         </form>
@@ -54,11 +54,17 @@
                 @forelse($roomCategories as $cat)
                     <tr>
                         <td class="fw-semibold">{{ $cat->name }}</td>
-                        <td>{{ $cat->hotel->name ?? 'N/A' }}</td>
+                        <td>
+                            @if($cat->hotel)
+                                <span class="badge bg-light text-dark border"><i class="bi bi-building me-1"></i>{{ $cat->hotel->name }}</span>
+                            @else
+                                <span class="text-muted">N/A</span>
+                            @endif
+                        </td>
                         <td>{{ Str::limit($cat->description, 60) }}</td>
                         <td>{{ $cat->sort_order }}</td>
                         <td><span class="badge bg-info">{{ $cat->roomTypes->count() }}</span></td>
-                        <td><span class="badge bg-{{ $cat->is_active ? 'success' : 'secondary' }}">{{ $cat->is_active ? 'Active' : 'Inactive' }}</span></td>
+                        <td><span class="badge bg-{{ $cat->status ? 'success' : 'secondary' }}">{{ $cat->status ? 'Active' : 'Inactive' }}</span></td>
                         <td class="text-end">
                             <a href="{{ route('admin.room-categories.edit', $cat->id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
                             <form method="POST" action="{{ route('admin.room-categories.destroy', $cat->id) }}" class="d-inline" onsubmit="return confirm('Are you sure?')">

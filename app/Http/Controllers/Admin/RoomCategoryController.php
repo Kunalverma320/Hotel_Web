@@ -11,11 +11,20 @@ class RoomCategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $query = RoomCategory::with(['hotel']);
+        $query = RoomCategory::with(['hotel', 'roomTypes']);
 
-        if ($request->filled('hotel_id')) {
-            $query->byHotel($request->hotel_id);
+        if ($request->has('hotel_id')) {
+            $selectedHotelId = $request->input('hotel_id');
+            if (!empty($selectedHotelId)) {
+                $query->byHotel($selectedHotelId);
+            }
+        } else {
+            $selectedHotelId = session('current_hotel_id');
+            if ($selectedHotelId) {
+                $query->byHotel($selectedHotelId);
+            }
         }
+
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -27,14 +36,15 @@ class RoomCategoryController extends Controller
         $roomCategories = $query->orderBy('sort_order')->latest()->paginate(15);
         $hotels = Hotel::active()->orderBy('name')->get();
 
-        return view('admin.rooms.categories.index', compact('roomCategories', 'hotels'));
+        return view('admin.rooms.categories.index', compact('roomCategories', 'hotels', 'selectedHotelId'));
     }
 
     public function create()
     {
         $hotels = Hotel::active()->orderBy('name')->get();
+        $selectedHotelId = session('current_hotel_id');
 
-        return view('admin.rooms.categories.create', compact('hotels'));
+        return view('admin.rooms.categories.create', compact('hotels', 'selectedHotelId'));
     }
 
     public function store(Request $request)
@@ -44,11 +54,12 @@ class RoomCategoryController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'sort_order' => 'nullable|integer|min:0',
-            'is_active' => 'boolean',
         ]);
 
-        $data = $request->only(['hotel_id', 'name', 'description', 'sort_order', 'is_active']);
+        $data = $request->only(['hotel_id', 'name', 'description', 'sort_order']);
         $data['slug'] = \Illuminate\Support\Str::slug($request->name);
+        $statusInput = $request->input('status', $request->input('is_active', 1));
+        $data['status'] = in_array($statusInput, ['active', '1', 1, true], true) ? 1 : 0;
 
         RoomCategory::create($data);
 
@@ -59,8 +70,9 @@ class RoomCategoryController extends Controller
     {
         $roomCategory = RoomCategory::findOrFail($id);
         $hotels = Hotel::active()->orderBy('name')->get();
+        $selectedHotelId = $roomCategory->hotel_id ?? session('current_hotel_id');
 
-        return view('admin.rooms.categories.edit', compact('roomCategory', 'hotels'));
+        return view('admin.rooms.categories.edit', compact('roomCategory', 'hotels', 'selectedHotelId'));
     }
 
     public function update(Request $request, $id)
@@ -72,11 +84,12 @@ class RoomCategoryController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'sort_order' => 'nullable|integer|min:0',
-            'is_active' => 'boolean',
         ]);
 
-        $data = $request->only(['hotel_id', 'name', 'description', 'sort_order', 'is_active']);
+        $data = $request->only(['hotel_id', 'name', 'description', 'sort_order']);
         $data['slug'] = \Illuminate\Support\Str::slug($request->name);
+        $statusInput = $request->input('status', $request->input('is_active', 1));
+        $data['status'] = in_array($statusInput, ['active', '1', 1, true], true) ? 1 : 0;
 
         $roomCategory->update($data);
 

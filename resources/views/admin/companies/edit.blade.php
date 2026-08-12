@@ -91,8 +91,8 @@
                         <div class="col-md-4">
                             <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
                             <select name="status" id="status" class="form-select" required>
-                                <option value="active" {{ old('status', $company->status) == 'active' ? 'selected' : '' }}>Active</option>
-                                <option value="inactive" {{ old('status', $company->status) == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                                <option value="active" {{ old('status', ($company->status ?? 1) ? 'active' : 'inactive') == 'active' ? 'selected' : '' }}>Active</option>
+                                <option value="inactive" {{ old('status', ($company->status ?? 1) ? 'active' : 'inactive') == 'inactive' ? 'selected' : '' }}>Inactive</option>
                             </select>
                         </div>
                         <div class="col-12">

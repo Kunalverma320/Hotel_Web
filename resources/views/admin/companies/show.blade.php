@@ -27,7 +27,7 @@
                 @endif
                 <h5>{{ $company->name }}</h5>
                 <p class="text-muted mb-2">{{ $company->email ?? '-' }}</p>
-                @if($company->status == 'active')
+                @if($company->status)
                     <span class="badge bg-success fs-6">Active</span>
                 @else
                     <span class="badge bg-danger fs-6">Inactive</span>

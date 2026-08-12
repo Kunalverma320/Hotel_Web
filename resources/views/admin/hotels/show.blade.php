@@ -179,7 +179,7 @@
                         <strong>{{ Str::limit($hotel->cancellation_policy ?? 'Standard policy', 50) }}</strong>
                     </div>
                 </div>
-                @if($hotel->policies->count() > 0)
+                @if(!empty($hotel->policies) && $hotel->policies->count() > 0)
                 <hr>
                 @foreach($hotel->policies as $policy)
                     <div class="mb-2">
@@ -193,7 +193,7 @@
         </div>
 
         {{-- Nearby Places --}}
-        @if($hotel->nearby_places->count() > 0)
+        @if(!empty($hotel->nearbyPlaces) && $hotel->nearbyPlaces->count() > 0)
         <div class="card mb-4">
             <div class="card-header"><h6 class="mb-0"><i class="ri-map-pin-2-line me-1"></i> Nearby Places</h6></div>
             <div class="card-body">
@@ -201,7 +201,7 @@
                     <table class="table table-sm mb-0">
                         <thead><tr><th>Place</th><th>Type</th><th>Distance</th></tr></thead>
                         <tbody>
-                            @foreach($hotel->nearby_places as $place)
+                            @foreach($hotel->nearbyPlaces as $place)
                             <tr>
                                 <td>{{ $place->name }}</td>
                                 <td><span class="badge bg-light text-dark">{{ $place->type }}</span></td>

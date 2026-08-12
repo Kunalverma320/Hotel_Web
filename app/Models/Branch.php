@@ -16,14 +16,17 @@ class Branch extends Model
         'company_id',
         'name',
         'code',
+        'slug',
         'email',
         'phone',
         'address',
         'city',
         'state',
         'country',
+        'zipcode',
         'postal_code',
         'branch_manager_id',
+        'status',
         'is_active',
         'settings',
     ];
@@ -31,6 +34,7 @@ class Branch extends Model
     protected function casts(): array
     {
         return [
+            'status' => 'boolean',
             'is_active' => 'boolean',
             'settings' => 'array',
         ];
@@ -58,7 +62,9 @@ class Branch extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where(function ($q) {
+            $q->where('status', 1)->orWhere('status', 'active')->orWhere('status', true);
+        });
     }
 
     public function scopeByCompany($query, int $companyId)

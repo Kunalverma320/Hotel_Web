@@ -38,11 +38,6 @@
         {{-- Rooms --}}
         @if(auth()->user()->can('view rooms') || auth()->user()->can('view room-types'))
         <div class="sidebar-heading small text-muted text-uppercase px-3 mt-3 mb-1">Rooms</div>
-        @can('view rooms')
-        <a href="{{ route('admin.room-categories.index') }}" class="sidebar-link list-group-item list-group-item-action {{ request()->routeIs('admin.room-categories.*') ? 'active' : '' }}">
-            <i class="bi bi-grid"></i> Categories
-        </a>
-        @endcan
         @can('view room-types')
         <a href="{{ route('admin.room-types.index') }}" class="sidebar-link list-group-item list-group-item-action {{ request()->routeIs('admin.room-types.*') ? 'active' : '' }}">
             <i class="bi bi-layers"></i> Room Types
@@ -54,6 +49,9 @@
         </a>
         <a href="{{ route('admin.rooms.availability') }}" class="sidebar-link list-group-item list-group-item-action {{ request()->routeIs('admin.rooms.availability') ? 'active' : '' }}">
             <i class="bi bi-calendar3"></i> Availability
+        </a>
+        <a href="{{ route('admin.rooms.view3d') }}" class="sidebar-link list-group-item list-group-item-action {{ request()->routeIs('admin.rooms.view3d') ? 'active' : '' }}">
+            <i class="bi bi-box-seam text-info"></i> 3D Hotel View
         </a>
         @endcan
         @endif

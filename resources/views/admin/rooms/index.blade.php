@@ -18,25 +18,25 @@
             <div class="row g-3 align-items-end">
                 <div class="col-md-2">
                     <label class="form-label">Hotel</label>
-                    <select name="hotel_id" class="form-select form-select-sm">
+                    <select name="hotel_id" class="form-select form-select-sm" onchange="this.form.submit()">
                         <option value="">All Hotels</option>
                         @foreach($hotels as $hotel)
-                            <option value="{{ $hotel->id }}" {{ request('hotel_id') == $hotel->id ? 'selected' : '' }}>{{ $hotel->name }}</option>
+                            <option value="{{ $hotel->id }}" {{ (string)$selectedHotelId === (string)$hotel->id ? 'selected' : '' }}>{{ $hotel->name }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Room Type</label>
-                    <select name="room_type_id" class="form-select form-select-sm">
+                    <select name="room_type_id" class="form-select form-select-sm" onchange="this.form.submit()">
                         <option value="">All Types</option>
                         @foreach($roomTypes as $type)
-                            <option value="{{ $type->id }}" {{ request('room_type_id') == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
+                            <option value="{{ $type->id }}" data-hotel="{{ $type->hotel_id }}" {{ request('room_type_id') == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Status</label>
-                    <select name="status" class="form-select form-select-sm">
+                    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
                         <option value="">All Status</option>
                         @foreach(['available','occupied','maintenance','out_of_order','reserved','dirty','clean','inspected'] as $s)
                             <option value="{{ $s }}" {{ request('status') == $s ? 'selected' : '' }}>{{ ucfirst(str_replace('_',' ',$s)) }}</option>
@@ -45,10 +45,10 @@
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Floor</label>
-                    <select name="floor_id" class="form-select form-select-sm">
+                    <select name="floor_id" class="form-select form-select-sm" onchange="this.form.submit()">
                         <option value="">All Floors</option>
                         @foreach($floors as $floor)
-                            <option value="{{ $floor->id }}" {{ request('floor_id') == $floor->id ? 'selected' : '' }}>{{ $floor->name }}</option>
+                            <option value="{{ $floor->id }}" data-hotel="{{ $floor->hotel_id }}" {{ request('floor_id') == $floor->id ? 'selected' : '' }}>{{ $floor->name }} (Floor {{ $floor->floor_number ?? $floor->number }})</option>
                         @endforeach
                     </select>
                 </div>
@@ -57,7 +57,7 @@
                     <input type="text" name="search" class="form-control form-control-sm" placeholder="Room number..." value="{{ request('search') }}">
                 </div>
                 <div class="col-md-2 d-flex gap-1">
-                    <button type="submit" class="btn btn-sm btn-primary flex-fill"><i class="bi bi-search"></i></button>
+                    <button type="submit" class="btn btn-sm btn-primary flex-fill"><i class="bi bi-search"></i> Search</button>
                     <a href="{{ route('admin.rooms.index') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-counterclockwise"></i></a>
                     <a href="{{ route('admin.rooms.availability') }}" class="btn btn-sm btn-outline-info" title="Availability"><i class="bi bi-calendar3"></i></a>
                 </div>

@@ -12,7 +12,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
             $table->string('name');
-            $table->string('slug');
+            $table->string('code')->nullable();
+            $table->string('slug')->nullable();
             $table->text('address')->nullable();
             $table->string('city')->nullable();
             $table->string('state')->nullable();

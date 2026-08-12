@@ -10,14 +10,38 @@
         </div>
         <div class="ms-auto d-flex align-items-center gap-3">
             {{-- Hotel Selector --}}
-            @if(isset($currentHotel))
+            @if(isset($allHotels) && $allHotels->count() > 0)
             <div class="dropdown d-none d-lg-block">
-                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                    <i class="bi bi-building"></i> {{ $currentHotel->name ?? 'Select Hotel' }}
+                <button class="btn btn-sm btn-outline-primary dropdown-toggle fw-medium" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-building me-1"></i> {{ $currentHotel->name ?? 'All Hotels' }}
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="#"><i class="bi bi-building"></i> Hotel 1</a></li>
-                    <li><a class="dropdown-item" href="#"><i class="bi bi-building"></i> Hotel 2</a></li>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                    <li><h6 class="dropdown-header">Switch Active Hotel</h6></li>
+                    <li>
+                        <form method="POST" action="{{ route('admin.switch-hotel', 'all') }}">
+                            @csrf
+                            <button type="submit" class="dropdown-item d-flex align-items-center justify-content-between {{ empty($currentHotel) ? 'active' : '' }}">
+                                <span><i class="bi bi-buildings me-2"></i>All Hotels</span>
+                                @if(empty($currentHotel))
+                                    <i class="bi bi-check2 ms-2"></i>
+                                @endif
+                            </button>
+                        </form>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    @foreach($allHotels as $h)
+                        <li>
+                            <form method="POST" action="{{ route('admin.switch-hotel', $h->id) }}">
+                                @csrf
+                                <button type="submit" class="dropdown-item d-flex align-items-center justify-content-between {{ (isset($currentHotel) && $currentHotel->id == $h->id) ? 'active' : '' }}">
+                                    <span><i class="bi bi-building me-2"></i>{{ $h->name }}</span>
+                                    @if(isset($currentHotel) && $currentHotel->id == $h->id)
+                                        <i class="bi bi-check2 ms-2"></i>
+                                    @endif
+                                </button>
+                            </form>
+                        </li>
+                    @endforeach
                 </ul>
             </div>
             @endif

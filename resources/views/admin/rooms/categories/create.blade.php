@@ -20,7 +20,7 @@
                     <select name="hotel_id" class="form-select @error('hotel_id') is-invalid @enderror" required>
                         <option value="">Select Hotel</option>
                         @foreach($hotels as $hotel)
-                            <option value="{{ $hotel->id }}" {{ old('hotel_id', $roomCategory->hotel_id ?? '') == $hotel->id ? 'selected' : '' }}>{{ $hotel->name }}</option>
+                            <option value="{{ $hotel->id }}" {{ old('hotel_id', $selectedHotelId ?? session('current_hotel_id')) == $hotel->id ? 'selected' : '' }}>{{ $hotel->name }}</option>
                         @endforeach
                     </select>
                     @error('hotel_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -41,10 +41,10 @@
                     @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Active</label>
+                    <label class="form-label">Active Status</label>
                     <div class="form-check form-switch mt-2">
-                        <input type="hidden" name="is_active" value="0">
-                        <input type="checkbox" name="is_active" value="1" class="form-check-input" {{ old('is_active', $roomCategory->is_active ?? 1) ? 'checked' : '' }}>
+                        <input type="hidden" name="status" value="0">
+                        <input type="checkbox" name="status" value="1" class="form-check-input" {{ old('status', 1) ? 'checked' : '' }}>
                     </div>
                 </div>
             </div>

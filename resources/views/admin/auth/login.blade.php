@@ -56,7 +56,7 @@
         <h6 class="fw-bold mb-2"><i class="bi bi-shield-lock me-1"></i> Two-Factor Authentication</h6>
         <p class="text-muted mb-3" style="font-size:0.8125rem;">Enter the 6-digit code from your authenticator app.</p>
 
-        <form method="POST" action="{{ route('login.2fa.verify') }}" id="twoFactorForm">
+        <form method="POST" action="{{ route('admin.login.2fa.verify') }}" id="twoFactorForm">
             @csrf
             <input type="hidden" name="login_id" id="loginId" value="">
             <div class="mb-3">
@@ -80,7 +80,7 @@
         </div>
 
         <div id="backupCodeSection" style="display:none;" class="mt-3">
-            <form method="POST" action="{{ route('login.2fa.backup') }}">
+            <form method="POST" action="{{ route('admin.login.2fa.backup') }}">
                 @csrf
                 <input type="hidden" name="login_id" value="">
                 <div class="mb-3">

@@ -16,17 +16,36 @@ class Floor extends Model
         'hotel_id',
         'building_id',
         'name',
+        'floor_number',
         'number',
         'description',
+        'status',
         'is_active',
     ];
 
     protected function casts(): array
     {
         return [
+            'floor_number' => 'integer',
             'number' => 'integer',
+            'status' => 'boolean',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function getIsActiveAttribute(): bool
+    {
+        return (bool) ($this->attributes['status'] ?? false);
+    }
+
+    public function setIsActiveAttribute($value): void
+    {
+        $this->attributes['status'] = in_array($value, ['active', '1', 1, true], true) ? 1 : 0;
+    }
+
+    public function getNumberAttribute()
+    {
+        return $this->attributes['floor_number'] ?? $this->attributes['number'] ?? 0;
     }
 
     public function hotel(): BelongsTo
@@ -46,7 +65,9 @@ class Floor extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where(function ($q) {
+            $q->where('status', 1)->orWhere('status', 'active')->orWhere('status', true);
+        });
     }
 
     public function scopeByHotel($query, int $hotelId)

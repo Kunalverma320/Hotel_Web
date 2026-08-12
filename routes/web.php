@@ -70,6 +70,11 @@ Route::post('admin/login/2fa/verify', [AuthController::class, 'verifyTwoFactor']
 Route::post('admin/login/2fa/backup', [AuthController::class, 'verifyBackupCode'])->name('admin.login.2fa.backup');
 Route::get('admin/login/2fa', [AuthController::class, 'showTwoFactorForm'])->name('admin.login.2fa.form');
 
+// 2FA Route Aliases
+Route::post('login/2fa/verify', [AuthController::class, 'verifyTwoFactor'])->name('login.2fa.verify');
+Route::post('login/2fa/backup', [AuthController::class, 'verifyBackupCode'])->name('login.2fa.backup');
+Route::get('login/2fa', [AuthController::class, 'showTwoFactorForm'])->name('login.2fa.form');
+
 Route::get('logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware('auth')->group(function () {
@@ -84,6 +89,15 @@ Route::post('password/reset', [AuthController::class, 'resetPassword'])->name('p
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'set-current-hotel', 'check-admin-access'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/switch-hotel/{hotel}', function ($hotelId) {
+        if ($hotelId === 'all' || $hotelId === '0') {
+            session()->forget('current_hotel_id');
+            return redirect()->back()->with('success', 'Switched to All Hotels');
+        }
+        $hotel = \App\Models\Hotel::findOrFail($hotelId);
+        session(['current_hotel_id' => $hotel->id]);
+        return redirect()->back()->with('success', 'Switched to hotel: ' . $hotel->name);
+    })->name('switch-hotel');
 
     Route::controller(AuthController::class)->prefix('auth')->name('auth.')->group(function () {
         Route::post('/logout', 'logout')->name('logout');
@@ -91,6 +105,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'set-current-hotel',
 
     Route::resource('companies', CompanyController::class);
     Route::controller(CompanyController::class)->prefix('companies')->name('companies.')->group(function () {
+        Route::get('{company}/branches-list', 'getBranches')->name('branches-list');
         Route::post('{company}/smtp', 'updateSmtpSettings')->name('smtp');
         Route::post('{company}/sms', 'updateSmsSettings')->name('sms');
         Route::post('{company}/whatsapp', 'updateWhatsAppSettings')->name('whatsapp');
@@ -105,6 +120,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'set-current-hotel',
 
     Route::resource('hotels', HotelController::class);
     Route::controller(HotelController::class)->prefix('hotels')->name('hotels.')->group(function () {
+        Route::get('{hotel}/options', 'getOptions')->name('options');
         Route::get('{hotel}/images', 'images')->name('images');
         Route::post('{hotel}/images', 'uploadImage');
         Route::delete('images/{image}', 'deleteImage')->name('images.delete');
@@ -126,6 +142,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'set-current-hotel',
     Route::resource('room-categories', RoomCategoryController::class);
 
     Route::controller(RoomController::class)->prefix('rooms')->name('rooms.')->group(function () {
+        Route::get('view-3d', 'view3D')->name('view3d');
         Route::get('availability', 'availability')->name('availability');
         Route::get('get-availability', 'getAvailability')->name('get-availability');
         Route::post('{room}/status/{status}', 'updateStatus')->name('update-status');

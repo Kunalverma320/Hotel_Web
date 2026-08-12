@@ -23,20 +23,32 @@ class Company extends Model
         'city',
         'state',
         'country',
-        'postal_code',
+        'zipcode',
         'currency_id',
         'timezone_id',
-        'registration_number',
-        'tax_id',
-        'is_active',
-        'settings',
+        'gst_number',
+        'pan_number',
+        'smtp_host',
+        'smtp_port',
+        'smtp_username',
+        'smtp_password',
+        'smtp_encryption',
+        'sms_provider',
+        'sms_api_key',
+        'sms_sender_id',
+        'whatsapp_api_key',
+        'whatsapp_phone_id',
+        'google_maps_api_key',
+        'payment_gateway',
+        'payment_api_key',
+        'payment_merchant_id',
+        'status',
     ];
 
     protected function casts(): array
     {
         return [
-            'is_active' => 'boolean',
-            'settings' => 'array',
+            'status' => 'boolean',
         ];
     }
 
@@ -67,6 +79,8 @@ class Company extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where(function ($q) {
+            $q->where('status', 1)->orWhere('status', 'active')->orWhere('status', true);
+        });
     }
 }

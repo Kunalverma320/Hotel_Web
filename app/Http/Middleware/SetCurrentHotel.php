@@ -12,20 +12,25 @@ class SetCurrentHotel
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $hotelId = session('current_hotel_id')
-            ?? $request->input('hotel_id')
-            ?? $request->header('X-Hotel-Id');
+        $hotelId = session('current_hotel_id');
 
-        if ($hotelId) {
-            $hotel = Hotel::find($hotelId);
-            if ($hotel) {
-                view()->share('currentHotel', $hotel);
-                config(['app.current_hotel_id' => $hotelId]);
-                $request->merge(['hotel_id' => $hotelId]);
-            }
+        $hotel = $hotelId ? Hotel::find($hotelId) : null;
+
+        if ($hotel) {
+            view()->share('currentHotel', $hotel);
+            config(['app.current_hotel_id' => $hotel->id]);
+        } else {
+            view()->share('currentHotel', null);
+            config(['app.current_hotel_id' => null]);
         }
 
-        view()->share('hotels', Hotel::orderBy('name')->get());
+        $allHotels = Hotel::active()->orderBy('name')->get();
+        if ($allHotels->isEmpty()) {
+            $allHotels = Hotel::orderBy('name')->get();
+        }
+
+        view()->share('hotels', $allHotels);
+        view()->share('allHotels', $allHotels);
         view()->share('currentUser', Auth::user());
 
         return $next($request);

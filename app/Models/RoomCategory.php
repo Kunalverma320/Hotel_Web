@@ -19,6 +19,7 @@ class RoomCategory extends Model
         'description',
         'image',
         'sort_order',
+        'status',
         'is_active',
     ];
 
@@ -26,6 +27,7 @@ class RoomCategory extends Model
     {
         return [
             'sort_order' => 'integer',
+            'status' => 'boolean',
             'is_active' => 'boolean',
         ];
     }
@@ -40,9 +42,21 @@ class RoomCategory extends Model
         return $this->hasMany(RoomType::class);
     }
 
+    public function getIsActiveAttribute(): bool
+    {
+        return (bool) ($this->attributes['status'] ?? false);
+    }
+
+    public function setIsActiveAttribute($value): void
+    {
+        $this->attributes['status'] = in_array($value, ['active', '1', 1, true], true) ? 1 : 0;
+    }
+
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where(function ($q) {
+            $q->where('status', 1)->orWhere('status', 'active')->orWhere('status', true);
+        });
     }
 
     public function scopeByHotel($query, int $hotelId)

@@ -15,29 +15,19 @@
         <form method="POST" action="{{ route('admin.room-types.store') }}">
             @csrf
             <div class="row g-3">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label class="form-label">Hotel <span class="text-danger">*</span></label>
-                    <select name="hotel_id" class="form-select @error('hotel_id') is-invalid @enderror" required>
+                    <select name="hotel_id" id="hotel_id_select" class="form-select @error('hotel_id') is-invalid @enderror" required>
                         <option value="">Select Hotel</option>
                         @foreach($hotels as $hotel)
-                            <option value="{{ $hotel->id }}" {{ old('hotel_id') == $hotel->id ? 'selected' : '' }}>{{ $hotel->name }}</option>
+                            <option value="{{ $hotel->id }}" {{ old('hotel_id', $selectedHotelId ?? session('current_hotel_id')) == $hotel->id ? 'selected' : '' }}>{{ $hotel->name }}</option>
                         @endforeach
                     </select>
                     @error('hotel_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label">Room Category</label>
-                    <select name="room_category_id" class="form-select @error('room_category_id') is-invalid @enderror">
-                        <option value="">Select Category</option>
-                        @foreach($roomCategories as $cat)
-                            <option value="{{ $cat->id }}" {{ old('room_category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
-                        @endforeach
-                    </select>
-                    @error('room_category_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label class="form-label">Name <span class="text-danger">*</span></label>
-                    <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}" required>
+                    <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}" required placeholder="e.g. Deluxe Room, Executive Suite">
                     @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-12">
@@ -126,4 +116,35 @@
         </form>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const hotelSelect = document.getElementById('hotel_id_select');
+    const categorySelect = document.getElementById('room_category_id_select');
+
+    if (hotelSelect && categorySelect) {
+        function filterCategories() {
+            const selectedHotelId = hotelSelect.value;
+            const categoryOptions = categorySelect.querySelectorAll('option');
+            categoryOptions.forEach(option => {
+                if (option.value === '') return;
+                const hotelId = option.getAttribute('data-hotel');
+                if (!selectedHotelId || hotelId === selectedHotelId) {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                    if (option.selected) {
+                        categorySelect.value = '';
+                    }
+                }
+            });
+        }
+
+        hotelSelect.addEventListener('change', filterCategories);
+        filterCategories();
+    }
+});
+</script>
+@endpush
 @endsection

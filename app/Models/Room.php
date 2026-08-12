@@ -18,8 +18,11 @@ class Room extends Model
         'room_type_id',
         'building_id',
         'floor_id',
-        'number',
+        'room_number',
+        'room_name',
         'status',
+        'housekeeping_status',
+        'maintenance_status',
         'condition',
         'notes',
         'is_active',
@@ -32,6 +35,16 @@ class Room extends Model
             'is_active' => 'boolean',
             'settings' => 'array',
         ];
+    }
+
+    public function getNumberAttribute()
+    {
+        return $this->attributes['room_number'] ?? '';
+    }
+
+    public function setNumberAttribute($value)
+    {
+        $this->attributes['room_number'] = $value;
     }
 
     public function hotel(): BelongsTo
