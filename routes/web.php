@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\EmailController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\FinanceController;
+use App\Http\Controllers\Admin\FloorController;
 use App\Http\Controllers\Admin\GuestController;
 use App\Http\Controllers\Admin\GymController;
 use App\Http\Controllers\Admin\HotelController;
@@ -140,6 +141,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'set-current-hotel',
     });
 
     Route::resource('room-categories', RoomCategoryController::class);
+
+    Route::resource('floors', FloorController::class);
+    Route::controller(FloorController::class)->prefix('floors')->name('floors.')->group(function () {
+        Route::post('{floor}/toggle-status', 'toggleStatus')->name('toggle-status');
+        Route::get('hotel/{hotel}', 'getFloorsByHotel')->name('by-hotel');
+    });
 
     Route::controller(RoomController::class)->prefix('rooms')->name('rooms.')->group(function () {
         Route::get('view-3d', 'view3D')->name('view3d');

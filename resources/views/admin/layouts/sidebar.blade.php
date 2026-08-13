@@ -36,8 +36,13 @@
         @endif
 
         {{-- Rooms --}}
-        @if(auth()->user()->can('view rooms') || auth()->user()->can('view room-types'))
+        @if(auth()->user()->can('view rooms') || auth()->user()->can('view room-types') || auth()->user()->can('view floors'))
         <div class="sidebar-heading small text-muted text-uppercase px-3 mt-3 mb-1">Rooms</div>
+        @if(auth()->user()->can('view floors') || auth()->user()->can('view rooms'))
+        <a href="{{ route('admin.floors.index') }}" class="sidebar-link list-group-item list-group-item-action {{ request()->routeIs('admin.floors.*') ? 'active' : '' }}">
+            <i class="bi bi-layers-half text-warning"></i> Floors
+        </a>
+        @endif
         @can('view room-types')
         <a href="{{ route('admin.room-types.index') }}" class="sidebar-link list-group-item list-group-item-action {{ request()->routeIs('admin.room-types.*') ? 'active' : '' }}">
             <i class="bi bi-layers"></i> Room Types

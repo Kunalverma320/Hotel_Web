@@ -16,34 +16,41 @@ class RoomController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Room::with(['hotel', 'roomType', 'floor']);
+        $query = Room::with(['hotel', 'roomType', 'building', 'floor']);
 
-        $selectedHotelId = $request->input('hotel_id', session('current_hotel_id'));
-        if ($selectedHotelId) {
-            $query->byHotel($selectedHotelId);
+        if ($request->has('hotel_id')) {
+            $selectedHotelId = $request->input('hotel_id');
+            if (!empty($selectedHotelId)) {
+                $query->byHotel($selectedHotelId);
+            }
+        } else {
+            $selectedHotelId = session('current_hotel_id');
+            if ($selectedHotelId) {
+                $query->byHotel($selectedHotelId);
+            }
         }
-        if ($request->filled('room_type_id')) {
-            $query->byRoomType($request->room_type_id);
-        }
-        if ($request->filled('status')) {
-            $query->byStatus($request->status);
+
+        if ($request->filled('type_id')) {
+            $query->byRoomType($request->type_id);
         }
         if ($request->filled('floor_id')) {
             $query->byFloor($request->floor_id);
+        }
+        if ($request->filled('status')) {
+            $query->byStatus($request->status);
         }
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('room_number', 'like', "%{$search}%")
-                  ->orWhere('room_name', 'like', "%{$search}%")
-                  ->orWhere('notes', 'like', "%{$search}%");
+                  ->orWhere('room_name', 'like', "%{$search}%");
             });
         }
 
         $rooms = $query->latest()->paginate(24);
         $hotels = Hotel::active()->orderBy('name')->get();
-        $roomTypes = RoomType::active()->orderBy('name')->get();
-        $floors = Floor::active()->orderBy('floor_number')->get();
+        $roomTypes = RoomType::active()->when($selectedHotelId, fn($q) => $q->byHotel($selectedHotelId))->orderBy('name')->get();
+        $floors = Floor::active()->when($selectedHotelId, fn($q) => $q->byHotel($selectedHotelId))->orderBy('floor_number')->get();
         $view = $request->get('view', 'grid');
 
         return view('admin.rooms.index', compact('rooms', 'hotels', 'roomTypes', 'floors', 'view', 'selectedHotelId'));
@@ -52,11 +59,11 @@ class RoomController extends Controller
     public function create()
     {
         $hotels = Hotel::active()->orderBy('name')->get();
-        $selectedHotelId = session('current_hotel_id');
-        $roomTypes = RoomType::active()->orderBy('name')->get();
+        $selectedHotelId = session('current_hotel_id') ?? $hotels->first()?->id;
+        $roomTypes = RoomType::active()->when($selectedHotelId, fn($q) => $q->byHotel($selectedHotelId))->orderBy('name')->get();
         $roomCategories = RoomCategory::active()->orderBy('name')->get();
-        $buildings = Building::active()->orderBy('name')->get();
-        $floors = Floor::active()->orderBy('floor_number')->get();
+        $buildings = Building::active()->when($selectedHotelId, fn($q) => $q->byHotel($selectedHotelId))->orderBy('name')->get();
+        $floors = Floor::active()->when($selectedHotelId, fn($q) => $q->byHotel($selectedHotelId))->orderBy('floor_number')->get();
 
         return view('admin.rooms.create', compact('hotels', 'roomTypes', 'roomCategories', 'buildings', 'floors', 'selectedHotelId'));
     }
@@ -103,10 +110,11 @@ class RoomController extends Controller
     {
         $room = Room::findOrFail($id);
         $hotels = Hotel::active()->orderBy('name')->get();
-        $roomTypes = RoomType::active()->orderBy('name')->get();
+        $selectedHotelId = $room->hotel_id;
+        $roomTypes = RoomType::active()->when($selectedHotelId, fn($q) => $q->byHotel($selectedHotelId))->orderBy('name')->get();
         $roomCategories = RoomCategory::active()->orderBy('name')->get();
-        $buildings = Building::active()->orderBy('name')->get();
-        $floors = Floor::active()->orderBy('floor_number')->get();
+        $buildings = Building::active()->when($selectedHotelId, fn($q) => $q->byHotel($selectedHotelId))->orderBy('name')->get();
+        $floors = Floor::active()->when($selectedHotelId, fn($q) => $q->byHotel($selectedHotelId))->orderBy('floor_number')->get();
 
         return view('admin.rooms.edit', compact('room', 'hotels', 'roomTypes', 'roomCategories', 'buildings', 'floors'));
     }
@@ -120,10 +128,9 @@ class RoomController extends Controller
             'room_type_id' => 'required|exists:room_types,id',
             'building_id' => 'nullable|exists:buildings,id',
             'floor_id' => 'nullable|exists:floors,id',
-            'number' => 'nullable|string|max:50',
-            'room_number' => 'nullable|string|max:50',
-            'status' => 'nullable|string',
-            'notes' => 'nullable|string',
+            'room_number' => 'required|string|max:50',
+            'status' => 'required|string',
+            'housekeeping_status' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
 
@@ -132,16 +139,13 @@ class RoomController extends Controller
             'room_number', 'room_name', 'status', 'housekeeping_status',
             'maintenance_status', 'condition', 'notes', 'is_active',
         ]);
-        if (empty($data['room_number'])) {
-            $data['room_number'] = $request->input('number', $room->room_number);
-        }
 
         $room->update($data);
         if ($request->has('amenities')) {
             $room->amenities()->sync($request->amenities);
         }
 
-        return redirect()->route('admin.rooms.show', $room->id)->with('success', 'Room updated successfully.');
+        return redirect()->route('admin.rooms.index')->with('success', 'Room updated successfully.');
     }
 
     public function destroy($id)
@@ -272,9 +276,9 @@ class RoomController extends Controller
             ->orderBy('room_number')
             ->get();
 
-        $roomTypes = RoomType::active()->orderBy('name')->get();
-        $floors = Floor::active()->orderBy('floor_number')->get();
-        $buildings = Building::active()->orderBy('name')->get();
+        $roomTypes = RoomType::active()->when($selectedHotelId, fn($q) => $q->byHotel($selectedHotelId))->orderBy('name')->get();
+        $floors = Floor::active()->when($selectedHotelId, fn($q) => $q->byHotel($selectedHotelId))->orderBy('floor_number')->get();
+        $buildings = Building::active()->when($selectedHotelId, fn($q) => $q->byHotel($selectedHotelId))->orderBy('name')->get();
 
         return view('admin.rooms.view3d', compact('rooms', 'hotels', 'hotel', 'selectedHotelId', 'roomTypes', 'floors', 'buildings'));
     }

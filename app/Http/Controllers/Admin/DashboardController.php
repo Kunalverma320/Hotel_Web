@@ -318,9 +318,15 @@ class DashboardController extends Controller
     protected function getTopCustomers($hotelId)
     {
         $query = DB::table('guests')
-            ->select('guests.*', DB::raw('COUNT(bookings.id) as bookings_count'), DB::raw('SUM(bookings.total_amount) as total_spent'))
+            ->select(
+                'guests.id',
+                'guests.email',
+                DB::raw("TRIM(CONCAT(guests.first_name, ' ', COALESCE(guests.last_name, ''))) as name"),
+                DB::raw('COUNT(bookings.id) as bookings_count'),
+                DB::raw('COALESCE(SUM(bookings.total_amount), 0) as total_spent')
+            )
             ->leftJoin('bookings', 'guests.id', '=', 'bookings.guest_id')
-            ->groupBy('guests.id')
+            ->groupBy('guests.id', 'guests.first_name', 'guests.last_name', 'guests.email')
             ->orderByDesc('total_spent')
             ->limit(5);
         if ($hotelId) {
@@ -332,10 +338,15 @@ class DashboardController extends Controller
     protected function getTopHotels()
     {
         return DB::table('hotels')
-            ->select('hotels.*', DB::raw('COUNT(bookings.id) as bookings_count'), DB::raw('COALESCE(SUM(payments.amount), 0) as revenue'))
+            ->select(
+                'hotels.id',
+                'hotels.name',
+                DB::raw('COUNT(DISTINCT bookings.id) as bookings_count'),
+                DB::raw('COALESCE(SUM(payments.amount), 0) as revenue')
+            )
             ->leftJoin('bookings', 'hotels.id', '=', 'bookings.hotel_id')
             ->leftJoin('payments', 'bookings.id', '=', 'payments.booking_id')
-            ->groupBy('hotels.id')
+            ->groupBy('hotels.id', 'hotels.name')
             ->orderByDesc('revenue')
             ->limit(5)
             ->get();
@@ -344,15 +355,28 @@ class DashboardController extends Controller
     protected function getTopRooms($hotelId)
     {
         $query = DB::table('rooms')
-            ->select('rooms.*', DB::raw('COUNT(booking_rooms.booking_id) as bookings_count'), DB::raw('COALESCE(SUM(bookings.total_amount), 0) as revenue'))
+            ->select(
+                'rooms.id',
+                'rooms.room_number',
+                'room_types.name as room_type_name',
+                DB::raw('COUNT(DISTINCT booking_rooms.booking_id) as bookings_count'),
+                DB::raw('COALESCE(SUM(bookings.total_amount), 0) as revenue')
+            )
+            ->leftJoin('room_types', 'rooms.room_type_id', '=', 'room_types.id')
             ->leftJoin('booking_rooms', 'rooms.id', '=', 'booking_rooms.room_id')
             ->leftJoin('bookings', 'booking_rooms.booking_id', '=', 'bookings.id')
-            ->groupBy('rooms.id')
+            ->groupBy('rooms.id', 'rooms.room_number', 'room_types.name')
             ->orderByDesc('bookings_count')
             ->limit(5);
         if ($hotelId) {
             $query->where('rooms.hotel_id', $hotelId);
         }
-        return $query->get();
+        $rooms = $query->get();
+
+        foreach ($rooms as $room) {
+            $room->type = (object) ['name' => $room->room_type_name ?? 'N/A'];
+        }
+
+        return $rooms;
     }
 }

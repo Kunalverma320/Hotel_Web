@@ -14,6 +14,7 @@ return new class extends Migration
             $table->foreignId('building_id')->nullable()->constrained()->nullOnDelete();
             $table->string('name');
             $table->integer('floor_number');
+            $table->text('description')->nullable();
             $table->boolean('status')->default(true);
             $table->timestamps();
         });

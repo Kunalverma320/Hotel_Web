@@ -13,7 +13,7 @@ class RoleAndPermissionSeeder extends Seeder
         app()->make(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
         $modules = [
-            'dashboard', 'companies', 'branches', 'hotels', 'rooms', 'room-types',
+            'dashboard', 'companies', 'branches', 'hotels', 'rooms', 'room-types', 'floors',
             'bookings', 'check-ins', 'check-outs', 'guests', 'crm', 'leads',
             'housekeeping', 'maintenance', 'restaurant', 'room-service', 'laundry',
             'spa', 'gym', 'pool', 'events', 'inventory', 'purchases', 'suppliers',

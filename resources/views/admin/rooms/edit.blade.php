@@ -52,7 +52,10 @@
                     @error('building_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Floor</label>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label mb-0">Floor</label>
+                        <a href="{{ route('admin.floors.index') }}" target="_blank" class="small text-primary text-decoration-none"><i class="bi bi-plus-circle me-1"></i>Add Floor</a>
+                    </div>
                     <select name="floor_id" id="floor_id_edit_select" class="form-select @error('floor_id') is-invalid @enderror">
                         <option value="">Select Floor</option>
                         @foreach($floors as $floor)
